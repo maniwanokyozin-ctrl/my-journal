@@ -9,7 +9,6 @@
   <meta name="theme-color" content="#161412" />
   <title>Journal</title>
 
-  <!-- iPhoneホーム画面用アプリアイコン（Warm Espresso仕様SVG生成） -->
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23201D1A'/><rect x='46' y='38' width='88' height='104' rx='12' fill='none' stroke='%23D98A6C' stroke-width='7'/><line x1='66' y1='68' x2='114' y2='68' stroke='%23EDE8E1' stroke-width='6' stroke-linecap='round'/><line x1='66' y1='90' x2='114' y2='90' stroke='%23B0A79C' stroke-width='6' stroke-linecap='round'/><line x1='66' y1='112' x2='96' y2='112' stroke='%23D98A6C' stroke-width='6' stroke-linecap='round'/></svg>" />
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +51,7 @@
       border: 1px solid var(--border-color);
       border-radius: 14px;
       color: var(--text-main);
-      font-size: 16px; /* iOS Safariの自動ズーム防止 */
+      font-size: 16px;
       transition: border-color 0.2s ease;
     }
     .field:focus {
@@ -112,7 +111,7 @@
 </head>
 <body class="min-h-screen flex flex-col items-center">
 
-  <!-- パスコードロック画面（設定時のみ起動時表示） -->
+  <!-- パスコードロック画面 -->
   <div id="lockScreen" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center px-6" style="background: var(--bg-main);">
     <p class="text-xs text-muted tracking-widest uppercase mb-2">Private Journal</p>
     <h2 class="text-base font-bold mb-6">パスコードを入力</h2>
@@ -120,7 +119,6 @@
     <p id="unlockError" class="text-xs text-red-400 h-4"></p>
   </div>
 
-  <!-- メインコンテナ -->
   <div class="w-full max-w-xl flex-1 flex flex-col px-5 pt-5">
 
     <!-- ヘッダー -->
@@ -135,7 +133,6 @@
       </div>
     </header>
 
-    <!-- APIキー未設定時の案内バナー -->
     <div id="apiSetupBanner" class="hidden mb-5 p-3.5 rounded-2xl border border-subtle flex items-center justify-between gap-3" style="background: var(--accent-soft);">
       <span class="text-xs text-sub leading-relaxed">AI構造化を使うには「設定」タブからGemini APIキー（無料）を登録してください。</span>
       <button onclick="switchTab('settings')" class="btn-primary text-xs font-bold px-3 py-1.5 shrink-0">設定へ</button>
@@ -144,7 +141,6 @@
     <!-- ==================== TAB 1: 書く ==================== -->
     <main id="view-write" class="flex-1 flex flex-col gap-5 fade-in">
 
-      <!-- 過去の気づきリマインド -->
       <div id="serendipityBox" class="hidden items-start justify-between gap-3 pl-3.5 border-l-2" style="border-color: var(--accent);">
         <div class="text-xs leading-relaxed">
           <span class="text-[10px] text-muted block mb-0.5">過去の自分の気づきより</span>
@@ -153,7 +149,6 @@
         <button onclick="rotateSerendipity()" class="text-[11px] text-muted px-2 py-1 shrink-0">切替</button>
       </div>
 
-      <!-- 殴り書き入力カード -->
       <section class="card">
         <div class="flex items-center justify-between mb-3">
           <span class="text-xs font-bold">今日の思考を吐き出す</span>
@@ -163,7 +158,7 @@
         <textarea
           id="rawInput"
           rows="6"
-          placeholder="まとまっていなくて構いません。今日あったこと、引っかかっていること、明日やることをそのまま書き出してください（キーボード右下のマイクで音声入力もおすすめ）..."
+          placeholder="まとまっていなくて構いません。今日あったこと、引っかかっていること、明日やることをそのまま書き出してください..."
           class="w-full field p-4 leading-relaxed resize-y placeholder:opacity-40"
         ></textarea>
 
@@ -180,14 +175,14 @@
         </button>
       </section>
 
-      <!-- AI構造化プレビュー＆編集カード -->
+      <!-- AI構造化プレビュー -->
       <section id="aiPreviewSection" class="hidden card fade-in">
         <div class="flex items-center justify-between pb-3 mb-4 border-b border-subtle">
           <div>
             <span class="text-xs font-bold text-accent">整理プレビュー</span>
             <p class="text-[11px] text-muted mt-0.5">タップして自由に手直しできます</p>
           </div>
-          <button onclick="toggleCoachBox()" id="coachToggleBtn" class="btn-sub text-[11px] px-3 py-1.5">
+          <button onclick="toggleCoachBox()" class="btn-sub text-[11px] px-3 py-1.5">
             深掘りの問い
           </button>
         </div>
@@ -222,7 +217,7 @@
           </div>
           <div>
             <label class="text-[11px] text-sub font-bold block mb-1.5">出来事の整理</label>
-            <textarea id="editReflection" rows="3" class="w-full field p-3 text-sm leading-relaxed"></textarea>
+            <textarea id="editReflection" rows="4" class="w-full field p-3 text-sm leading-relaxed"></textarea>
           </div>
           <div>
             <label class="text-[11px] text-sub font-bold block mb-1.5">得られた気づき</label>
@@ -268,7 +263,7 @@
       <div id="timelineList" class="space-y-4"></div>
     </main>
 
-    <!-- ==================== TAB 3: 週次レポート ==================== -->
+    <!-- ==================== TAB 3: 週次分析 ==================== -->
     <main id="view-insights" class="hidden flex-1 flex-col gap-5 fade-in">
       <section class="card">
         <div class="flex items-center justify-between mb-4">
@@ -295,65 +290,53 @@
       </section>
     </main>
 
-    <!-- ==================== TAB 4: 設定・バックアップ ==================== -->
+    <!-- ==================== TAB 4: 設定 ==================== -->
     <main id="view-settings" class="hidden flex-1 flex-col gap-5 fade-in">
       <section class="card space-y-3">
-        <h2 class="text-xs font-bold text-accent">Gemini APIキー設定（端末内のみ保存）</h2>
+        <h2 class="text-xs font-bold text-accent">Gemini APIキー設定（自動モデル検出対応）</h2>
         <p class="text-xs text-sub leading-relaxed">
-          Google AI Studioで無料発行できるAPIキーを入力してください。キーはあなたのiPhone内にのみ保存され、外部には公開されません。
+          Google AI Studioで発行した「AIza...」から始まるキーを貼り付けてください。保存時に使える最新AIモデルを自動で検出します。
         </p>
         <input id="apiKeyInput" type="password" placeholder="AIzaSy..." class="w-full field p-3 text-sm" />
-        <button onclick="saveApiKey()" class="w-full py-3 btn-primary font-bold text-xs">
-          APIキーを保存する
-        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="saveApiKey()" class="py-3 btn-primary font-bold text-xs">保存する</button>
+          <button onclick="testApiConnection()" id="testApiBtn" class="py-3 btn-sub font-bold text-xs">接続テスト・診断</button>
+        </div>
+        <p id="apiDiagText" class="text-xs text-sub leading-relaxed whitespace-pre-line"></p>
       </section>
 
       <section class="card space-y-3">
         <h2 class="text-xs font-bold">アプリ起動時パスコードロック（任意）</h2>
-        <p class="text-xs text-sub leading-relaxed">4桁の数字を設定すると、アプリを開くたびにロック画面が表示されます（空欄で保存すると解除）。</p>
-        <input id="pinSettingInput" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字（未設定）" class="w-full field p-3 text-sm" />
-        <button onclick="savePinSetting()" class="w-full py-2.5 btn-sub text-xs font-bold">
-          パスコード設定を更新
-        </button>
+        <input id="pinSettingInput" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字（空欄で解除）" class="w-full field p-3 text-sm" />
+        <button onclick="savePinSetting()" class="w-full py-2.5 btn-sub text-xs font-bold">パスコード設定を更新</button>
       </section>
 
       <section class="card space-y-3">
-        <h2 class="text-xs font-bold">データのバックアップ・PC連携</h2>
-        <p class="text-xs text-sub leading-relaxed">
-          iCloud DriveやファイルアプリにJSON形式でバックアップを保存したり、PCとデータを受け渡したりできます。
-        </p>
+        <h2 class="text-xs font-bold">データのバックアップ・書き出し</h2>
         <div class="grid grid-cols-2 gap-2.5">
-          <button onclick="exportJSON()" class="py-2.5 btn-sub text-xs font-bold">JSONバックアップ保存</button>
-          <button onclick="exportMarkdown()" class="py-2.5 btn-sub text-xs font-bold">Markdownで書き出し</button>
+          <button onclick="exportJSON()" class="py-2.5 btn-sub text-xs font-bold">JSONバックアップ</button>
+          <button onclick="exportMarkdown()" class="py-2.5 btn-sub text-xs font-bold">Markdown出力</button>
         </div>
         <label class="block w-full text-center py-2.5 btn-sub text-xs cursor-pointer">
-          <span>JSONバックアップを読み込む（復元）</span>
+          <span>JSONバックアップを読み込む</span>
           <input type="file" accept=".json,application/json" onchange="importJSON(event)" class="hidden" />
         </label>
+        <button onclick="location.reload()" class="w-full py-2.5 btn-sub text-xs text-muted mt-2">アプリを最新状態に再読み込み</button>
       </section>
     </main>
 
   </div>
 
-  <!-- ボトムナビゲーション（iPhoneホームバー余白対応） -->
+  <!-- ボトムナビ -->
   <nav class="fixed bottom-0 inset-x-0 border-t border-subtle backdrop-blur-md z-40" style="background: rgba(22, 20, 18, 0.92); padding-bottom: env(safe-area-inset-bottom);">
     <div class="max-w-xl mx-auto grid grid-cols-4 h-14 px-2">
-      <button onclick="switchTab('write')" id="nav-write" class="flex items-center justify-center text-xs font-bold text-accent border-t-2" style="border-color: var(--accent);">
-        書く
-      </button>
-      <button onclick="switchTab('timeline')" id="nav-timeline" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
-        振り返る
-      </button>
-      <button onclick="switchTab('insights')" id="nav-insights" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
-        週次分析
-      </button>
-      <button onclick="switchTab('settings')" id="nav-settings" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
-        設定
-      </button>
+      <button onclick="switchTab('write')" id="nav-write" class="flex items-center justify-center text-xs font-bold text-accent border-t-2" style="border-color: var(--accent);">書く</button>
+      <button onclick="switchTab('timeline')" id="nav-timeline" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">振り返る</button>
+      <button onclick="switchTab('insights')" id="nav-insights" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">週次分析</button>
+      <button onclick="switchTab('settings')" id="nav-settings" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">設定</button>
     </div>
   </nav>
 
-  <!-- トースト通知 -->
   <div id="toast" class="fixed top-12 inset-x-0 mx-auto w-fit max-w-xs px-4 py-2.5 rounded-xl btn-primary text-xs font-bold shadow-2xl hidden z-50 text-center"></div>
 
   <script>
@@ -361,6 +344,7 @@
       ENTRIES: 'warm_journal_entries_v1',
       DRAFT: 'warm_journal_draft_v1',
       API_KEY: 'warm_journal_gemini_key',
+      MODEL: 'warm_journal_gemini_model',
       PIN: 'warm_journal_pin',
       WEEKLY_REPORT: 'warm_journal_weekly_report'
     };
@@ -370,28 +354,97 @@
     let onlyStarred = false;
     let serendipityIdx = 0;
 
+    // 改行や余計な空白・引用符を自動クリーニングする関数
+    function cleanApiKey(rawKey) {
+      const match = String(rawKey || '').match(/AIza[0-9A-Za-z\-_]{30,50}/);
+      return match ? match[0] : String(rawKey || '').replace(/\s+/g, '');
+    }
+
+    // 利用可能な最適なFlashモデルを自動検出してGeminiを呼び出す共通関数
+    async function callGeminiSmart(apiKey, promptText, wantJson) {
+      const key = cleanApiKey(apiKey);
+      if (!key) throw new Error('APIキーが空です');
+
+      // 1. キャッシュ済みモデル＋利用可能モデル一覧を取得
+      let candidates = [];
+      const cachedModel = localStorage.getItem(KEYS.MODEL);
+      if (cachedModel) candidates.push(cachedModel);
+
+      try {
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+        if (!listRes.ok) {
+          const errBody = await listRes.json().catch(() => ({}));
+          throw new Error(`キー認証エラー(${listRes.status}): ${errBody.error?.message || 'APIキーが正しいか確認してください'}`);
+        }
+        const listData = await listRes.json();
+        const available = (listData.models || [])
+          .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map(m => m.name.replace(/^models\//, ''));
+
+        // Flash系モデル（非preview・非image/tts優先）を優先順に並べる
+        const flashModels = available.filter(n =>
+          /gemini.*flash/i.test(n) && !/tts|image|audio|vision|live|thinking/i.test(n)
+        ).sort((a, b) => {
+          const aLite = /lite/i.test(a) ? 1 : 0;
+          const bLite = /lite/i.test(b) ? 1 : 0;
+          if (aLite !== bLite) return aLite - bLite;
+          return b.localeCompare(a); // 新しいバージョン番号を優先
+        });
+
+        candidates = [...new Set([...candidates, ...flashModels, ...available])];
+      } catch (e) {
+        if (String(e.message).includes('キー認証エラー')) throw e;
+        candidates = [...new Set([...candidates, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'])];
+      }
+
+      // 2. 使えるモデルで順番にトライ（404や429が出ても自動で次へフォールバック）
+      let lastError = '利用可能なモデルが見つかりませんでした';
+      for (const model of candidates.slice(0, 5)) {
+        const body = {
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: wantJson
+            ? { responseMimeType: 'application/json', temperature: 0.4 }
+            : { temperature: 0.5 }
+        };
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+          localStorage.setItem(KEYS.MODEL, model);
+          const data = await res.json();
+          const out = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          return { text: out, model };
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          lastError = `[${model} / HTTP ${res.status}] ${errJson.error?.message || ''}`;
+          if (res.status === 400 && errJson.error?.message?.includes('API key')) {
+            throw new Error('APIキーが無効です。「AIza」から始まるキーを再確認してください。');
+          }
+        }
+      }
+      throw new Error(lastError);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-      // 日付ヘッダー表示
       const now = new Date();
       const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
       document.getElementById('dateHeader').textContent =
         `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${days[now.getDay()]}`;
 
-      // パスコードロック確認
       const savedPin = localStorage.getItem(KEYS.PIN);
       if (savedPin) {
         document.getElementById('lockScreen').classList.remove('hidden');
         document.getElementById('pinSettingInput').value = savedPin;
       }
 
-      // APIキー確認
-      const savedKey = localStorage.getItem(KEYS.API_KEY) || '';
+      const savedKey = cleanApiKey(localStorage.getItem(KEYS.API_KEY) || '');
       document.getElementById('apiKeyInput').value = savedKey;
-      if (!savedKey) {
-        document.getElementById('apiSetupBanner').classList.remove('hidden');
-      }
+      if (!savedKey) document.getElementById('apiSetupBanner').classList.remove('hidden');
 
-      // 下書き復元＆オートセーブ
       const draft = localStorage.getItem(KEYS.DRAFT) || '';
       const rawEl = document.getElementById('rawInput');
       rawEl.value = draft;
@@ -414,9 +467,8 @@
 
     function checkUnlockPin() {
       const val = document.getElementById('unlockPinInput').value;
-      const savedPin = localStorage.getItem(KEYS.PIN);
       if (val.length === 4) {
-        if (val === savedPin) {
+        if (val === localStorage.getItem(KEYS.PIN)) {
           document.getElementById('lockScreen').classList.add('hidden');
         } else {
           document.getElementById('unlockError').textContent = 'パスコードが違います';
@@ -429,26 +481,20 @@
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 2400);
+      setTimeout(() => t.classList.add('hidden'), 2500);
     }
 
     function switchTab(tab) {
       ['write', 'timeline', 'insights', 'settings'].forEach(v => {
         const el = document.getElementById(`view-${v}`);
         const nav = document.getElementById(`nav-${v}`);
-        if (v === tab) {
-          el.classList.remove('hidden');
-          el.classList.add('flex');
-          nav.classList.add('font-bold', 'text-accent');
-          nav.classList.remove('text-muted');
-          nav.style.borderColor = 'var(--accent)';
-        } else {
-          el.classList.add('hidden');
-          el.classList.remove('flex');
-          nav.classList.remove('font-bold', 'text-accent');
-          nav.classList.add('text-muted');
-          nav.style.borderColor = 'transparent';
-        }
+        const active = v === tab;
+        el.classList.toggle('hidden', !active);
+        el.classList.toggle('flex', active);
+        nav.classList.toggle('font-bold', active);
+        nav.classList.toggle('text-accent', active);
+        nav.classList.toggle('text-muted', !active);
+        nav.style.borderColor = active ? 'var(--accent)' : 'transparent';
       });
       if (tab === 'timeline') renderTimeline();
       if (tab === 'insights') { renderCalendar(); renderWeeklyStats(); }
@@ -456,8 +502,7 @@
     }
 
     function refreshStats() {
-      const uniqueDays = new Set(entries.map(e => e.date)).size;
-      document.getElementById('streakCount').textContent = `${uniqueDays}日`;
+      document.getElementById('streakCount').textContent = `${new Set(entries.map(e => e.date)).size}日`;
     }
 
     function renderSerendipity() {
@@ -474,10 +519,7 @@
       document.getElementById('serendipityText').textContent = `「${item.insight}」（${item.date.replace(/-/g, '.')}）`;
     }
 
-    function rotateSerendipity() {
-      serendipityIdx++;
-      renderSerendipity();
-    }
+    function rotateSerendipity() { serendipityIdx++; renderSerendipity(); }
 
     function clearDraft() {
       if (!document.getElementById('rawInput').value) return;
@@ -493,9 +535,7 @@
       document.getElementById('energyLabel').textContent = `${document.getElementById('energyInput').value} / 5`;
     }
 
-    function toggleCoachBox() {
-      document.getElementById('coachBox').classList.toggle('hidden');
-    }
+    function toggleCoachBox() { document.getElementById('coachBox').classList.toggle('hidden'); }
 
     function openManualSave() {
       const raw = document.getElementById('rawInput').value.trim();
@@ -505,20 +545,26 @@
       document.getElementById('editInsight').value = '';
       document.getElementById('editNextAction').value = '';
       document.getElementById('editTags').value = 'デイリーログ';
-      document.getElementById('coachQuestion').textContent = '今日一番印象に残っていることは何ですか？';
       document.getElementById('aiPreviewSection').classList.remove('hidden');
       document.getElementById('aiPreviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // 本物のGemini APIで殴り書きを構造化
+    // JSON文字列抽出の安全ラッパー（コードブロックが付いてきても確実にパース）
+    function safeParseJson(rawText) {
+      const cleaned = String(rawText || '').replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+      }
+      return JSON.parse(cleaned);
+    }
+
     async function runGeminiStructure() {
       const raw = document.getElementById('rawInput').value.trim();
-      if (!raw) {
-        showToast('まずは今の気持ちや出来事を書いてください');
-        return;
-      }
+      if (!raw) { showToast('まずは今の気持ちや出来事を書いてください'); return; }
 
-      const apiKey = localStorage.getItem(KEYS.API_KEY);
+      const apiKey = cleanApiKey(localStorage.getItem(KEYS.API_KEY));
       if (!apiKey) {
         showToast('先に「設定」タブでGemini APIキーを保存してください');
         switchTab('settings');
@@ -531,62 +577,44 @@
       btn.textContent = 'AIが思考を整理しています...';
 
       const prompt = `あなたは優秀なエグゼクティブ・コーチ兼編集者です。
-ビジネスパーソン（求人広告営業のチームリーダー）が夜、疲れた状態でスマホに殴り書きした以下のメモを読み取り、本人の言葉の温度感を大切にしつつ、後から振り返りやすい美しい日本語のJSONデータに変換してください。
+ビジネスパーソン（求人広告営業のチームリーダー）が夜、スマホに殴り書きした以下のメモを読み取り、本人の言葉のニュアンスを活かしつつ、後から振り返りやすい日本語のJSONデータに変換してください。
 
-出力は以下のJSONスキーマのみを厳密に返してください（コードブロック不要）：
+必ず以下のJSON形式のみを出力してください：
 {
-  "praise": "今日ユーザーが頑張ったこと・前進した点を1〜2文で温かく承認する文章",
+  "praise": "今日ユーザーが頑張ったこと・気づけた前進を1〜2文で温かく承認する文章",
   "reflection": "出来事や事実を整理した箇条書き（「・」始まりで改行区切り）",
-  "insight": "具体的な出来事から1段階抽象化した、今後の仕事や人生にも活かせる本質的な『気づき・学び』（1〜2文）",
-  "nextAction": "明日以降やるべき具体的なアクション（「・」始まり。特になければ『・しっかり睡眠をとって回復する』）",
+  "insight": "具体的な出来事から1段階抽象化した、今後のマネジメントや仕事にも活かせる本質的な『気づき・学び』（1〜2文）",
+  "nextAction": "明日以降意識することや具体的なアクション（「・」始まり）",
   "tags": ["タグ1", "タグ2", "タグ3"],
   "mood": 3,
-  "energy": 2,
-  "coachQuestion": "本人の内省をもう一段深めるための、優しく鋭い問いかけを1問だけ"
+  "energy": 3,
+  "coachQuestion": "本人の内省をもう一段深めるための鋭く優しい問いかけを1問"
 }
-※mood（気分・充実度）とenergy（エネルギー残量）は文脈から1〜5の整数で推定してください。
 
 【ユーザーの殴り書きメモ】
 ${raw}`;
 
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.4
-            }
-          })
-        });
-
-        if (!res.ok) {
-          throw new Error('API通信エラー（APIキーを確認してください）');
-        }
-
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const parsed = JSON.parse(text);
+        const { text } = await callGeminiSmart(apiKey, prompt, true);
+        const parsed = safeParseJson(text);
 
         document.getElementById('moodInput').value = parsed.mood || 3;
         document.getElementById('energyInput').value = parsed.energy || 3;
         updateMoodUI();
 
         document.getElementById('editPraise').value = parsed.praise || '';
-        document.getElementById('editReflection').value = parsed.reflection || '';
+        document.getElementById('editReflection').value = Array.isArray(parsed.reflection) ? parsed.reflection.join('\n') : (parsed.reflection || '');
         document.getElementById('editInsight').value = parsed.insight || '';
-        document.getElementById('editNextAction').value = parsed.nextAction || '';
+        document.getElementById('editNextAction').value = Array.isArray(parsed.nextAction) ? parsed.nextAction.join('\n') : (parsed.nextAction || '');
         document.getElementById('editTags').value = Array.isArray(parsed.tags) ? parsed.tags.join(', ') : '';
-        document.getElementById('coachQuestion').textContent = parsed.coachQuestion || '今日の出来事で一番大切だったポイントはどこですか？';
+        document.getElementById('coachQuestion').textContent = parsed.coachQuestion || 'この気づきを明日どんな場面で試せそうですか？';
         document.getElementById('coachAnswer').value = '';
         document.getElementById('coachBox').classList.add('hidden');
 
         document.getElementById('aiPreviewSection').classList.remove('hidden');
         document.getElementById('aiPreviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        alert('AI整理に失敗しました：' + err.message);
+        alert('AI整理エラー詳細：\n' + err.message);
       } finally {
         btn.disabled = false;
         btn.classList.remove('glow-pulse');
@@ -594,12 +622,49 @@ ${raw}`;
       }
     }
 
+    async function testApiConnection() {
+      const rawKey = document.getElementById('apiKeyInput').value;
+      const key = cleanApiKey(rawKey);
+      const diag = document.getElementById('apiDiagText');
+      const btn = document.getElementById('testApiBtn');
+
+      if (!key) {
+        diag.textContent = '⚠️ APIキー欄が空です。';
+        return;
+      }
+      localStorage.setItem(KEYS.API_KEY, key);
+      localStorage.removeItem(KEYS.MODEL);
+      document.getElementById('apiKeyInput').value = key;
+
+      btn.disabled = true;
+      diag.textContent = '接続テスト中...（利用可能なモデルを検索しています）';
+
+      try {
+        const { model } = await callGeminiSmart(key, '「OK」とだけ返答してください', false);
+        document.getElementById('apiSetupBanner').classList.add('hidden');
+        diag.textContent = `✅ 接続成功！\n自動選択された最適モデル：${model}\nこのまま「書く」タブでAI整理が使えます！`;
+      } catch (err) {
+        diag.textContent = `❌ 接続エラー：\n${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function saveApiKey() {
+      const key = cleanApiKey(document.getElementById('apiKeyInput').value);
+      document.getElementById('apiKeyInput').value = key;
+      localStorage.setItem(KEYS.API_KEY, key);
+      localStorage.removeItem(KEYS.MODEL);
+      document.getElementById('apiSetupBanner').classList.toggle('hidden', Boolean(key));
+      showToast('APIキーを保存しました');
+    }
+
     function saveJournalEntry() {
       const now = new Date();
       const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
-      const newEntry = {
+      entries.unshift({
         id: 'j-' + Date.now(),
         date: dateStr,
         time: timeStr,
@@ -613,9 +678,8 @@ ${raw}`;
         nextAction: document.getElementById('editNextAction').value.trim(),
         tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(Boolean),
         coachQA: document.getElementById('coachAnswer').value.trim()
-      };
+      });
 
-      entries.unshift(newEntry);
       localStorage.setItem(KEYS.ENTRIES, JSON.stringify(entries));
       localStorage.removeItem(KEYS.DRAFT);
 
@@ -626,7 +690,7 @@ ${raw}`;
 
       refreshStats();
       renderSerendipity();
-      showToast('今日の記録を保存しました。お疲れ様でした！');
+      showToast('今日の記録を保存しました。おやすみなさい！');
       switchTab('timeline');
     }
 
@@ -681,7 +745,7 @@ ${raw}`;
 
       const container = document.getElementById('timelineList');
       if (!list.length) {
-        container.innerHTML = `<div class="card text-center py-10 text-xs text-muted">まだ記録がありません。「書く」タブから最初の1行を残してみましょう。</div>`;
+        container.innerHTML = `<div class="card text-center py-10 text-xs text-muted">まだ記録がありません。</div>`;
         return;
       }
 
@@ -734,17 +798,13 @@ ${raw}`;
       const year = now.getFullYear();
       const month = now.getMonth();
       document.getElementById('calendarTitle').textContent = `${year}年${month + 1}月 コンディション推移`;
-
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-
       const byDate = {};
       entries.forEach(e => { if (!byDate[e.date]) byDate[e.date] = e; });
 
       let html = '';
-      for (let i = 0; i < firstDay; i++) {
-        html += `<div></div>`;
-      }
+      for (let i = 0; i < firstDay; i++) html += `<div></div>`;
       for (let d = 1; d <= daysInMonth; d++) {
         const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const has = byDate[key];
@@ -779,12 +839,12 @@ ${raw}`;
             <span class="text-base font-bold" style="color: var(--text-main);">${avgEnergy} / 5.0</span>
           </div>
         </div>
-        <div class="whitespace-pre-line leading-relaxed">${savedReport ? escapeHtml(savedReport) : '右上の「AI分析を実行」を押すと、直近の記録からあなたの成長や思考の癖をAIがレポート化します。'}</div>
+        <div class="whitespace-pre-line leading-relaxed">${savedReport ? escapeHtml(savedReport) : '右上の「AI分析を実行」を押すと、直近の記録からあなたの成長や思考の傾向をAIがレポート化します。'}</div>
       `;
     }
 
     async function generateWeeklyAIReport() {
-      const apiKey = localStorage.getItem(KEYS.API_KEY);
+      const apiKey = cleanApiKey(localStorage.getItem(KEYS.API_KEY));
       if (!apiKey) { showToast('設定タブでAPIキーを登録してください'); return; }
       if (!entries.length) { showToast('まだ分析する記録がありません'); return; }
 
@@ -799,40 +859,27 @@ ${raw}`;
       const prompt = `以下の直近のジャーナル記録を横断分析し、温かく知的なエグゼクティブ・コーチとして300〜400文字程度で「1. 今週の思考テーマと成長している点」「2. コンディション傾向と来週へのアドバイス」を簡潔にまとめてください。\n\n${recentLogs}`;
 
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        const data = await res.json();
-        const report = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        localStorage.setItem(KEYS.WEEKLY_REPORT, report.trim());
+        const { text } = await callGeminiSmart(apiKey, prompt, false);
+        localStorage.setItem(KEYS.WEEKLY_REPORT, text.trim());
         renderWeeklyStats();
         showToast('週次レポートを更新しました');
       } catch (e) {
-        alert('週次分析に失敗しました');
+        alert('週次分析エラー：\n' + e.message);
       } finally {
         btn.disabled = false;
         btn.textContent = 'AI分析を実行';
       }
     }
 
-    function saveApiKey() {
-      const key = document.getElementById('apiKeyInput').value.trim();
-      localStorage.setItem(KEYS.API_KEY, key);
-      document.getElementById('apiSetupBanner').classList.toggle('hidden', Boolean(key));
-      showToast('APIキーを端末に保存しました');
-    }
-
     function savePinSetting() {
       const pin = document.getElementById('pinSettingInput').value.trim();
       if (pin && !/^\d{4}$/.test(pin)) {
-        alert('4桁の半角数字で入力してください（解除する場合は空欄にしてください）');
+        alert('4桁の半角数字で入力してください（解除する場合は空欄）');
         return;
       }
       if (pin) {
         localStorage.setItem(KEYS.PIN, pin);
-        showToast('4桁パスコードを設定しました');
+        showToast('パスコードを設定しました');
       } else {
         localStorage.removeItem(KEYS.PIN);
         showToast('パスコードロックを解除しました');

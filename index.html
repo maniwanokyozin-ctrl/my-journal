@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Journal" />
+  <meta name="theme-color" content="#161412" />
+  <title>Journal</title>
+
+  <!-- iPhoneホーム画面用アプリアイコン（Warm Espresso仕様SVG生成） -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23201D1A'/><rect x='46' y='38' width='88' height='104' rx='12' fill='none' stroke='%23D98A6C' stroke-width='7'/><line x1='66' y1='68' x2='114' y2='68' stroke='%23EDE8E1' stroke-width='6' stroke-linecap='round'/><line x1='66' y1='90' x2='114' y2='90' stroke='%23B0A79C' stroke-width='6' stroke-linecap='round'/><line x1='66' y1='112' x2='96' y2='112' stroke='%23D98A6C' stroke-width='6' stroke-linecap='round'/></svg>" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-main: #161412;
+      --bg-surface: #201D1A;
+      --bg-input: #12100E;
+      --bg-elevated: #2A2622;
+      --border-color: rgba(231, 220, 206, 0.09);
+      --border-strong: rgba(217, 138, 108, 0.48);
+      --text-main: #EDE8E1;
+      --text-sub: #B0A79C;
+      --text-muted: #787067;
+      --accent: #D98A6C;
+      --accent-fg: #161412;
+      --accent-soft: rgba(217, 138, 108, 0.13);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: "Meiryo UI", "メイリオ", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+      letter-spacing: 0.02em;
+      -webkit-tap-highlight-color: transparent;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.3rem;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    }
+
+    .field {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      color: var(--text-main);
+      font-size: 16px; /* iOS Safariの自動ズーム防止 */
+      transition: border-color 0.2s ease;
+    }
+    .field:focus {
+      outline: none;
+      border-color: var(--border-strong);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-radius: 14px;
+      transition: opacity 0.2s ease, transform 0.1s ease;
+    }
+    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; }
+
+    .btn-sub {
+      background: var(--bg-elevated);
+      color: var(--text-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+    .btn-sub:active { background: #332E29; }
+
+    .text-sub { color: var(--text-sub); }
+    .text-muted { color: var(--text-muted); }
+    .text-accent { color: var(--accent); }
+    .border-subtle { border-color: var(--border-color); }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    .fade-in { animation: fadeIn 0.22s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .glow-pulse { animation: glowPulse 1.6s ease-in-out infinite; }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+  <!-- パスコードロック画面（設定時のみ起動時表示） -->
+  <div id="lockScreen" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center px-6" style="background: var(--bg-main);">
+    <p class="text-xs text-muted tracking-widest uppercase mb-2">Private Journal</p>
+    <h2 class="text-base font-bold mb-6">パスコードを入力</h2>
+    <input id="unlockPinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" oninput="checkUnlockPin()" class="field text-center tracking-[0.6em] text-xl w-40 py-3 mb-3" />
+    <p id="unlockError" class="text-xs text-red-400 h-4"></p>
+  </div>
+
+  <!-- メインコンテナ -->
+  <div class="w-full max-w-xl flex-1 flex flex-col px-5 pt-5">
+
+    <!-- ヘッダー -->
+    <header class="flex items-baseline justify-between mb-6">
+      <div>
+        <p id="dateHeader" class="text-[11px] text-muted tracking-widest uppercase mb-0.5"></p>
+        <h1 class="text-lg font-bold tracking-tight">Evening Reflection</h1>
+      </div>
+      <div class="text-right">
+        <span class="text-[11px] text-muted">記録日数 </span>
+        <span class="text-xs font-bold text-accent" id="streakCount">0日</span>
+      </div>
+    </header>
+
+    <!-- APIキー未設定時の案内バナー -->
+    <div id="apiSetupBanner" class="hidden mb-5 p-3.5 rounded-2xl border border-subtle flex items-center justify-between gap-3" style="background: var(--accent-soft);">
+      <span class="text-xs text-sub leading-relaxed">AI構造化を使うには「設定」タブからGemini APIキー（無料）を登録してください。</span>
+      <button onclick="switchTab('settings')" class="btn-primary text-xs font-bold px-3 py-1.5 shrink-0">設定へ</button>
+    </div>
+
+    <!-- ==================== TAB 1: 書く ==================== -->
+    <main id="view-write" class="flex-1 flex flex-col gap-5 fade-in">
+
+      <!-- 過去の気づきリマインド -->
+      <div id="serendipityBox" class="hidden items-start justify-between gap-3 pl-3.5 border-l-2" style="border-color: var(--accent);">
+        <div class="text-xs leading-relaxed">
+          <span class="text-[10px] text-muted block mb-0.5">過去の自分の気づきより</span>
+          <span id="serendipityText" class="text-sub"></span>
+        </div>
+        <button onclick="rotateSerendipity()" class="text-[11px] text-muted px-2 py-1 shrink-0">切替</button>
+      </div>
+
+      <!-- 殴り書き入力カード -->
+      <section class="card">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold">今日の思考を吐き出す</span>
+          <span id="autosaveStatus" class="text-[11px] text-muted">自動保存オン</span>
+        </div>
+
+        <textarea
+          id="rawInput"
+          rows="6"
+          placeholder="まとまっていなくて構いません。今日あったこと、引っかかっていること、明日やることをそのまま書き出してください（キーボード右下のマイクで音声入力もおすすめ）..."
+          class="w-full field p-4 leading-relaxed resize-y placeholder:opacity-40"
+        ></textarea>
+
+        <div class="flex items-center justify-between mt-3">
+          <span class="text-[11px] text-muted" id="charCount">0文字</span>
+          <button onclick="clearDraft()" class="text-xs text-muted px-2 py-1">入力クリア</button>
+        </div>
+
+        <button onclick="runGeminiStructure()" id="aiStructureBtn" class="mt-3 w-full py-3.5 btn-primary font-bold text-sm tracking-wide">
+          AIで綺麗にまとめる
+        </button>
+        <button onclick="openManualSave()" class="mt-2.5 w-full py-2 text-xs text-muted">
+          AIを使わずそのまま保存する
+        </button>
+      </section>
+
+      <!-- AI構造化プレビュー＆編集カード -->
+      <section id="aiPreviewSection" class="hidden card fade-in">
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-subtle">
+          <div>
+            <span class="text-xs font-bold text-accent">整理プレビュー</span>
+            <p class="text-[11px] text-muted mt-0.5">タップして自由に手直しできます</p>
+          </div>
+          <button onclick="toggleCoachBox()" id="coachToggleBtn" class="btn-sub text-[11px] px-3 py-1.5">
+            深掘りの問い
+          </button>
+        </div>
+
+        <div id="coachBox" class="hidden mb-4 p-3.5 field fade-in">
+          <p class="text-[11px] font-bold text-accent mb-1">内省を深める問い（任意回答）</p>
+          <p id="coachQuestion" class="text-xs text-sub leading-relaxed mb-2.5"></p>
+          <input id="coachAnswer" type="text" placeholder="一言メモ（空欄のままでも保存可）" class="w-full bg-transparent border-b border-subtle py-1.5 text-sm focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-5">
+          <div class="field px-3.5 py-2.5">
+            <div class="flex justify-between text-[11px] mb-2">
+              <span class="text-muted">気分・充実度</span>
+              <span id="moodLabel" class="font-bold">3 / 5</span>
+            </div>
+            <input id="moodInput" type="range" min="1" max="5" value="3" oninput="updateMoodUI()" class="w-full" />
+          </div>
+          <div class="field px-3.5 py-2.5">
+            <div class="flex justify-between text-[11px] mb-2">
+              <span class="text-muted">エネルギー残量</span>
+              <span id="energyLabel" class="font-bold">3 / 5</span>
+            </div>
+            <input id="energyInput" type="range" min="1" max="5" value="3" oninput="updateMoodUI()" class="w-full" />
+          </div>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div>
+            <label class="text-[11px] text-accent font-bold block mb-1.5">今日の前進・ハイライト</label>
+            <textarea id="editPraise" rows="2" class="w-full field p-3 text-sm leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label class="text-[11px] text-sub font-bold block mb-1.5">出来事の整理</label>
+            <textarea id="editReflection" rows="3" class="w-full field p-3 text-sm leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label class="text-[11px] text-sub font-bold block mb-1.5">得られた気づき</label>
+            <textarea id="editInsight" rows="3" class="w-full field p-3 text-sm leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label class="text-[11px] text-sub font-bold block mb-1.5">明日のネクストアクション</label>
+            <textarea id="editNextAction" rows="2" class="w-full field p-3 text-sm leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label class="text-[11px] text-sub font-bold block mb-1.5">タグ（カンマ区切り）</label>
+            <input id="editTags" type="text" class="w-full field p-3 text-sm" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-6 pt-4 border-t border-subtle">
+          <label class="flex items-center gap-2 text-xs text-sub cursor-pointer">
+            <input id="bookmarkCheck" type="checkbox" class="w-4 h-4 accent-[#D98A6C]" />
+            <span>重要な気づき</span>
+          </label>
+          <button onclick="saveJournalEntry()" class="px-6 py-3 btn-primary font-bold text-sm">
+            記録を保存する
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== TAB 2: 振り返る ==================== -->
+    <main id="view-timeline" class="hidden flex-1 flex-col gap-4 fade-in">
+      <div class="flex items-center gap-2">
+        <input
+          id="searchInput"
+          type="text"
+          oninput="renderTimeline()"
+          placeholder="過去の気づき・キーワードを検索..."
+          class="flex-1 field px-3.5 py-2.5 text-sm"
+        />
+        <button id="starFilterBtn" onclick="toggleStarFilter()" class="btn-sub px-3.5 py-2.5 text-xs shrink-0">
+          重要のみ
+        </button>
+      </div>
+      <div id="tagFilterContainer" class="flex flex-wrap gap-1.5"></div>
+      <div id="timelineList" class="space-y-4"></div>
+    </main>
+
+    <!-- ==================== TAB 3: 週次レポート ==================== -->
+    <main id="view-insights" class="hidden flex-1 flex-col gap-5 fade-in">
+      <section class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 id="calendarTitle" class="text-xs font-bold"></h2>
+          <span class="text-[11px] text-muted">ドット＝記録済</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1.5 text-center text-[10px] text-muted mb-2">
+          <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+        </div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-center text-xs"></div>
+      </section>
+
+      <section class="card space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-subtle">
+          <div>
+            <h3 class="text-xs font-bold">AI 週次振り返りレポート</h3>
+            <p class="text-[11px] text-muted mt-0.5">直近7件のログから思考の傾向を分析</p>
+          </div>
+          <button onclick="generateWeeklyAIReport()" id="weeklyAiBtn" class="btn-primary text-xs font-bold px-3.5 py-2">
+            AI分析を実行
+          </button>
+        </div>
+        <div id="weeklySummaryContent" class="space-y-3 text-xs leading-relaxed text-sub"></div>
+      </section>
+    </main>
+
+    <!-- ==================== TAB 4: 設定・バックアップ ==================== -->
+    <main id="view-settings" class="hidden flex-1 flex-col gap-5 fade-in">
+      <section class="card space-y-3">
+        <h2 class="text-xs font-bold text-accent">Gemini APIキー設定（端末内のみ保存）</h2>
+        <p class="text-xs text-sub leading-relaxed">
+          Google AI Studioで無料発行できるAPIキーを入力してください。キーはあなたのiPhone内にのみ保存され、外部には公開されません。
+        </p>
+        <input id="apiKeyInput" type="password" placeholder="AIzaSy..." class="w-full field p-3 text-sm" />
+        <button onclick="saveApiKey()" class="w-full py-3 btn-primary font-bold text-xs">
+          APIキーを保存する
+        </button>
+      </section>
+
+      <section class="card space-y-3">
+        <h2 class="text-xs font-bold">アプリ起動時パスコードロック（任意）</h2>
+        <p class="text-xs text-sub leading-relaxed">4桁の数字を設定すると、アプリを開くたびにロック画面が表示されます（空欄で保存すると解除）。</p>
+        <input id="pinSettingInput" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字（未設定）" class="w-full field p-3 text-sm" />
+        <button onclick="savePinSetting()" class="w-full py-2.5 btn-sub text-xs font-bold">
+          パスコード設定を更新
+        </button>
+      </section>
+
+      <section class="card space-y-3">
+        <h2 class="text-xs font-bold">データのバックアップ・PC連携</h2>
+        <p class="text-xs text-sub leading-relaxed">
+          iCloud DriveやファイルアプリにJSON形式でバックアップを保存したり、PCとデータを受け渡したりできます。
+        </p>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="exportJSON()" class="py-2.5 btn-sub text-xs font-bold">JSONバックアップ保存</button>
+          <button onclick="exportMarkdown()" class="py-2.5 btn-sub text-xs font-bold">Markdownで書き出し</button>
+        </div>
+        <label class="block w-full text-center py-2.5 btn-sub text-xs cursor-pointer">
+          <span>JSONバックアップを読み込む（復元）</span>
+          <input type="file" accept=".json,application/json" onchange="importJSON(event)" class="hidden" />
+        </label>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- ボトムナビゲーション（iPhoneホームバー余白対応） -->
+  <nav class="fixed bottom-0 inset-x-0 border-t border-subtle backdrop-blur-md z-40" style="background: rgba(22, 20, 18, 0.92); padding-bottom: env(safe-area-inset-bottom);">
+    <div class="max-w-xl mx-auto grid grid-cols-4 h-14 px-2">
+      <button onclick="switchTab('write')" id="nav-write" class="flex items-center justify-center text-xs font-bold text-accent border-t-2" style="border-color: var(--accent);">
+        書く
+      </button>
+      <button onclick="switchTab('timeline')" id="nav-timeline" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
+        振り返る
+      </button>
+      <button onclick="switchTab('insights')" id="nav-insights" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
+        週次分析
+      </button>
+      <button onclick="switchTab('settings')" id="nav-settings" class="flex items-center justify-center text-xs text-muted border-t-2 border-transparent">
+        設定
+      </button>
+    </div>
+  </nav>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed top-12 inset-x-0 mx-auto w-fit max-w-xs px-4 py-2.5 rounded-xl btn-primary text-xs font-bold shadow-2xl hidden z-50 text-center"></div>
+
+  <script>
+    const KEYS = {
+      ENTRIES: 'warm_journal_entries_v1',
+      DRAFT: 'warm_journal_draft_v1',
+      API_KEY: 'warm_journal_gemini_key',
+      PIN: 'warm_journal_pin',
+      WEEKLY_REPORT: 'warm_journal_weekly_report'
+    };
+
+    let entries = JSON.parse(localStorage.getItem(KEYS.ENTRIES) || '[]');
+    let activeTagFilter = null;
+    let onlyStarred = false;
+    let serendipityIdx = 0;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 日付ヘッダー表示
+      const now = new Date();
+      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      document.getElementById('dateHeader').textContent =
+        `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${days[now.getDay()]}`;
+
+      // パスコードロック確認
+      const savedPin = localStorage.getItem(KEYS.PIN);
+      if (savedPin) {
+        document.getElementById('lockScreen').classList.remove('hidden');
+        document.getElementById('pinSettingInput').value = savedPin;
+      }
+
+      // APIキー確認
+      const savedKey = localStorage.getItem(KEYS.API_KEY) || '';
+      document.getElementById('apiKeyInput').value = savedKey;
+      if (!savedKey) {
+        document.getElementById('apiSetupBanner').classList.remove('hidden');
+      }
+
+      // 下書き復元＆オートセーブ
+      const draft = localStorage.getItem(KEYS.DRAFT) || '';
+      const rawEl = document.getElementById('rawInput');
+      rawEl.value = draft;
+      document.getElementById('charCount').textContent = `${draft.length}文字`;
+
+      rawEl.addEventListener('input', (e) => {
+        const val = e.target.value;
+        localStorage.setItem(KEYS.DRAFT, val);
+        document.getElementById('charCount').textContent = `${val.length}文字`;
+        const t = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('autosaveStatus').textContent = `自動保存済 ${t}`;
+      });
+
+      refreshStats();
+      renderSerendipity();
+      renderTimeline();
+      renderCalendar();
+      renderWeeklyStats();
+    });
+
+    function checkUnlockPin() {
+      const val = document.getElementById('unlockPinInput').value;
+      const savedPin = localStorage.getItem(KEYS.PIN);
+      if (val.length === 4) {
+        if (val === savedPin) {
+          document.getElementById('lockScreen').classList.add('hidden');
+        } else {
+          document.getElementById('unlockError').textContent = 'パスコードが違います';
+          document.getElementById('unlockPinInput').value = '';
+        }
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2400);
+    }
+
+    function switchTab(tab) {
+      ['write', 'timeline', 'insights', 'settings'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const nav = document.getElementById(`nav-${v}`);
+        if (v === tab) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+          nav.classList.add('font-bold', 'text-accent');
+          nav.classList.remove('text-muted');
+          nav.style.borderColor = 'var(--accent)';
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+          nav.classList.remove('font-bold', 'text-accent');
+          nav.classList.add('text-muted');
+          nav.style.borderColor = 'transparent';
+        }
+      });
+      if (tab === 'timeline') renderTimeline();
+      if (tab === 'insights') { renderCalendar(); renderWeeklyStats(); }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function refreshStats() {
+      const uniqueDays = new Set(entries.map(e => e.date)).size;
+      document.getElementById('streakCount').textContent = `${uniqueDays}日`;
+    }
+
+    function renderSerendipity() {
+      const withInsights = entries.filter(e => e.insight && e.insight.trim());
+      const box = document.getElementById('serendipityBox');
+      if (!withInsights.length) {
+        box.classList.add('hidden');
+        box.classList.remove('flex');
+        return;
+      }
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+      const item = withInsights[serendipityIdx % withInsights.length];
+      document.getElementById('serendipityText').textContent = `「${item.insight}」（${item.date.replace(/-/g, '.')}）`;
+    }
+
+    function rotateSerendipity() {
+      serendipityIdx++;
+      renderSerendipity();
+    }
+
+    function clearDraft() {
+      if (!document.getElementById('rawInput').value) return;
+      if (!confirm('入力中の内容をクリアしますか？')) return;
+      document.getElementById('rawInput').value = '';
+      document.getElementById('charCount').textContent = '0文字';
+      localStorage.removeItem(KEYS.DRAFT);
+      document.getElementById('aiPreviewSection').classList.add('hidden');
+    }
+
+    function updateMoodUI() {
+      document.getElementById('moodLabel').textContent = `${document.getElementById('moodInput').value} / 5`;
+      document.getElementById('energyLabel').textContent = `${document.getElementById('energyInput').value} / 5`;
+    }
+
+    function toggleCoachBox() {
+      document.getElementById('coachBox').classList.toggle('hidden');
+    }
+
+    function openManualSave() {
+      const raw = document.getElementById('rawInput').value.trim();
+      if (!raw) { showToast('まずは1行書いてみましょう'); return; }
+      document.getElementById('editPraise').value = '';
+      document.getElementById('editReflection').value = raw;
+      document.getElementById('editInsight').value = '';
+      document.getElementById('editNextAction').value = '';
+      document.getElementById('editTags').value = 'デイリーログ';
+      document.getElementById('coachQuestion').textContent = '今日一番印象に残っていることは何ですか？';
+      document.getElementById('aiPreviewSection').classList.remove('hidden');
+      document.getElementById('aiPreviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 本物のGemini APIで殴り書きを構造化
+    async function runGeminiStructure() {
+      const raw = document.getElementById('rawInput').value.trim();
+      if (!raw) {
+        showToast('まずは今の気持ちや出来事を書いてください');
+        return;
+      }
+
+      const apiKey = localStorage.getItem(KEYS.API_KEY);
+      if (!apiKey) {
+        showToast('先に「設定」タブでGemini APIキーを保存してください');
+        switchTab('settings');
+        return;
+      }
+
+      const btn = document.getElementById('aiStructureBtn');
+      btn.disabled = true;
+      btn.classList.add('glow-pulse');
+      btn.textContent = 'AIが思考を整理しています...';
+
+      const prompt = `あなたは優秀なエグゼクティブ・コーチ兼編集者です。
+ビジネスパーソン（求人広告営業のチームリーダー）が夜、疲れた状態でスマホに殴り書きした以下のメモを読み取り、本人の言葉の温度感を大切にしつつ、後から振り返りやすい美しい日本語のJSONデータに変換してください。
+
+出力は以下のJSONスキーマのみを厳密に返してください（コードブロック不要）：
+{
+  "praise": "今日ユーザーが頑張ったこと・前進した点を1〜2文で温かく承認する文章",
+  "reflection": "出来事や事実を整理した箇条書き（「・」始まりで改行区切り）",
+  "insight": "具体的な出来事から1段階抽象化した、今後の仕事や人生にも活かせる本質的な『気づき・学び』（1〜2文）",
+  "nextAction": "明日以降やるべき具体的なアクション（「・」始まり。特になければ『・しっかり睡眠をとって回復する』）",
+  "tags": ["タグ1", "タグ2", "タグ3"],
+  "mood": 3,
+  "energy": 2,
+  "coachQuestion": "本人の内省をもう一段深めるための、優しく鋭い問いかけを1問だけ"
+}
+※mood（気分・充実度）とenergy（エネルギー残量）は文脈から1〜5の整数で推定してください。
+
+【ユーザーの殴り書きメモ】
+${raw}`;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.4
+            }
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error('API通信エラー（APIキーを確認してください）');
+        }
+
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const parsed = JSON.parse(text);
+
+        document.getElementById('moodInput').value = parsed.mood || 3;
+        document.getElementById('energyInput').value = parsed.energy || 3;
+        updateMoodUI();
+
+        document.getElementById('editPraise').value = parsed.praise || '';
+        document.getElementById('editReflection').value = parsed.reflection || '';
+        document.getElementById('editInsight').value = parsed.insight || '';
+        document.getElementById('editNextAction').value = parsed.nextAction || '';
+        document.getElementById('editTags').value = Array.isArray(parsed.tags) ? parsed.tags.join(', ') : '';
+        document.getElementById('coachQuestion').textContent = parsed.coachQuestion || '今日の出来事で一番大切だったポイントはどこですか？';
+        document.getElementById('coachAnswer').value = '';
+        document.getElementById('coachBox').classList.add('hidden');
+
+        document.getElementById('aiPreviewSection').classList.remove('hidden');
+        document.getElementById('aiPreviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        alert('AI整理に失敗しました：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('glow-pulse');
+        btn.textContent = 'AIで綺麗にまとめる';
+      }
+    }
+
+    function saveJournalEntry() {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+      const newEntry = {
+        id: 'j-' + Date.now(),
+        date: dateStr,
+        time: timeStr,
+        mood: Number(document.getElementById('moodInput').value),
+        energy: Number(document.getElementById('energyInput').value),
+        bookmarked: document.getElementById('bookmarkCheck').checked,
+        raw: document.getElementById('rawInput').value.trim(),
+        praise: document.getElementById('editPraise').value.trim(),
+        reflection: document.getElementById('editReflection').value.trim(),
+        insight: document.getElementById('editInsight').value.trim(),
+        nextAction: document.getElementById('editNextAction').value.trim(),
+        tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(Boolean),
+        coachQA: document.getElementById('coachAnswer').value.trim()
+      };
+
+      entries.unshift(newEntry);
+      localStorage.setItem(KEYS.ENTRIES, JSON.stringify(entries));
+      localStorage.removeItem(KEYS.DRAFT);
+
+      document.getElementById('rawInput').value = '';
+      document.getElementById('charCount').textContent = '0文字';
+      document.getElementById('bookmarkCheck').checked = false;
+      document.getElementById('aiPreviewSection').classList.add('hidden');
+
+      refreshStats();
+      renderSerendipity();
+      showToast('今日の記録を保存しました。お疲れ様でした！');
+      switchTab('timeline');
+    }
+
+    function toggleStarFilter() {
+      onlyStarred = !onlyStarred;
+      document.getElementById('starFilterBtn').style.borderColor = onlyStarred ? 'var(--accent)' : 'var(--border-color)';
+      document.getElementById('starFilterBtn').style.color = onlyStarred ? 'var(--accent)' : 'var(--text-sub)';
+      renderTimeline();
+    }
+
+    function selectTag(tag) {
+      activeTagFilter = activeTagFilter === tag ? null : tag;
+      renderTimeline();
+    }
+
+    function toggleCardView(id, showRaw) {
+      document.getElementById(`st-${id}`).classList.toggle('hidden', showRaw);
+      document.getElementById(`rw-${id}`).classList.toggle('hidden', !showRaw);
+    }
+
+    function toggleBookmark(id) {
+      entries = entries.map(e => e.id === id ? { ...e, bookmarked: !e.bookmarked } : e);
+      localStorage.setItem(KEYS.ENTRIES, JSON.stringify(entries));
+      renderTimeline();
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('この記録を削除しますか？')) return;
+      entries = entries.filter(e => e.id !== id);
+      localStorage.setItem(KEYS.ENTRIES, JSON.stringify(entries));
+      refreshStats();
+      renderSerendipity();
+      renderTimeline();
+    }
+
+    function renderTimeline() {
+      const q = (document.getElementById('searchInput').value || '').toLowerCase();
+      const allTags = [...new Set(entries.flatMap(e => e.tags || []))];
+
+      document.getElementById('tagFilterContainer').innerHTML = allTags.map(t => `
+        <button onclick="selectTag('${t.replace(/'/g, "\\'")}')" class="text-[11px] px-2.5 py-1 rounded-lg border ${
+          activeTagFilter === t ? 'btn-primary font-bold' : 'btn-sub'
+        }">#${t}</button>
+      `).join('');
+
+      const list = entries.filter(e => {
+        if (onlyStarred && !e.bookmarked) return false;
+        if (activeTagFilter && !(e.tags || []).includes(activeTagFilter)) return false;
+        if (q && !`${e.raw} ${e.praise} ${e.reflection} ${e.insight} ${e.nextAction} ${(e.tags || []).join(' ')}`.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      const container = document.getElementById('timelineList');
+      if (!list.length) {
+        container.innerHTML = `<div class="card text-center py-10 text-xs text-muted">まだ記録がありません。「書く」タブから最初の1行を残してみましょう。</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(e => `
+        <article class="card">
+          <div class="flex items-center justify-between pb-3 mb-3.5 border-b border-subtle">
+            <div>
+              <span class="text-xs font-bold">${e.date.replace(/-/g, '.')}</span>
+              <span class="text-[11px] text-muted ml-1.5">${e.time || ''}</span>
+              <span class="text-[11px] text-muted block mt-0.5">Mood ${e.mood}/5 · Energy ${e.energy}/5</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px]">
+              <button onclick="toggleCardView('${e.id}', false)" class="text-sub px-1.5 py-1">整理版</button>
+              <span class="text-muted">/</span>
+              <button onclick="toggleCardView('${e.id}', true)" class="text-muted px-1.5 py-1">原文</button>
+              <button onclick="toggleBookmark('${e.id}')" class="px-1.5 py-1 ${e.bookmarked ? 'text-accent font-bold' : 'text-muted'}">${e.bookmarked ? '★' : '☆'}</button>
+              <button onclick="deleteEntry('${e.id}')" class="text-muted px-1 py-1">削除</button>
+            </div>
+          </div>
+
+          <div id="st-${e.id}" class="space-y-3 text-xs leading-relaxed">
+            ${e.praise ? `<p class="text-sub">${escapeHtml(e.praise)}</p>` : ''}
+            ${e.reflection ? `<p class="whitespace-pre-line text-sub">${escapeHtml(e.reflection)}</p>` : ''}
+            ${e.insight ? `
+              <div class="pl-3.5 py-0.5 border-l-2" style="border-color: var(--accent);">
+                <span class="text-[10px] text-accent font-bold block mb-0.5">気づき</span>
+                <p class="font-medium text-sm leading-relaxed" style="color: var(--text-main);">${escapeHtml(e.insight)}</p>
+              </div>
+            ` : ''}
+            ${e.nextAction ? `
+              <div>
+                <span class="text-[10px] text-muted font-bold block mb-0.5">ネクストアクション</span>
+                <p class="text-sub whitespace-pre-line">${escapeHtml(e.nextAction)}</p>
+              </div>
+            ` : ''}
+            ${e.coachQA ? `<p class="text-sub pt-2 border-t border-subtle">深掘りメモ：${escapeHtml(e.coachQA)}</p>` : ''}
+          </div>
+
+          <div id="rw-${e.id}" class="hidden p-3.5 field text-xs text-sub leading-relaxed whitespace-pre-line">${escapeHtml(e.raw)}</div>
+
+          <div class="flex flex-wrap gap-2 mt-4">
+            ${(e.tags || []).map(t => `<span class="text-[11px] text-muted">#${escapeHtml(t)}</span>`).join('')}
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      document.getElementById('calendarTitle').textContent = `${year}年${month + 1}月 コンディション推移`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const byDate = {};
+      entries.forEach(e => { if (!byDate[e.date]) byDate[e.date] = e; });
+
+      let html = '';
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div></div>`;
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const has = byDate[key];
+        const isToday = d === now.getDate() ? 'border: 1px solid var(--accent);' : '';
+        html += `<div class="h-10 field flex flex-col items-center justify-center" style="${isToday}">
+          <span class="text-[11px] ${has ? 'font-bold' : 'text-muted'}">${d}</span>
+          ${has ? '<span class="w-1.5 h-1.5 rounded-full mt-0.5" style="background: var(--accent);"></span>' : ''}
+        </div>`;
+      }
+      document.getElementById('calendarGrid').innerHTML = html;
+    }
+
+    function renderWeeklyStats() {
+      const container = document.getElementById('weeklySummaryContent');
+      const savedReport = localStorage.getItem(KEYS.WEEKLY_REPORT);
+      if (!entries.length) {
+        container.innerHTML = `<p class="text-muted">記録が溜まると、ここに平均コンディションやAIの週次振り返りレポートが表示されます。</p>`;
+        return;
+      }
+      const recent = entries.slice(0, 7);
+      const avgMood = (recent.reduce((s, e) => s + e.mood, 0) / recent.length).toFixed(1);
+      const avgEnergy = (recent.reduce((s, e) => s + e.energy, 0) / recent.length).toFixed(1);
+
+      container.innerHTML = `
+        <div class="grid grid-cols-2 gap-2.5 mb-2">
+          <div class="field p-3">
+            <span class="text-[10px] text-muted block">直近平均 Mood</span>
+            <span class="text-base font-bold" style="color: var(--text-main);">${avgMood} / 5.0</span>
+          </div>
+          <div class="field p-3">
+            <span class="text-[10px] text-muted block">直近平均 Energy</span>
+            <span class="text-base font-bold" style="color: var(--text-main);">${avgEnergy} / 5.0</span>
+          </div>
+        </div>
+        <div class="whitespace-pre-line leading-relaxed">${savedReport ? escapeHtml(savedReport) : '右上の「AI分析を実行」を押すと、直近の記録からあなたの成長や思考の癖をAIがレポート化します。'}</div>
+      `;
+    }
+
+    async function generateWeeklyAIReport() {
+      const apiKey = localStorage.getItem(KEYS.API_KEY);
+      if (!apiKey) { showToast('設定タブでAPIキーを登録してください'); return; }
+      if (!entries.length) { showToast('まだ分析する記録がありません'); return; }
+
+      const btn = document.getElementById('weeklyAiBtn');
+      btn.disabled = true;
+      btn.textContent = '分析中...';
+
+      const recentLogs = entries.slice(0, 7).map(e =>
+        `[${e.date} 気分:${e.mood} エネルギー:${e.energy}] 気づき:${e.insight} / 原文:${e.raw}`
+      ).join('\n');
+
+      const prompt = `以下の直近のジャーナル記録を横断分析し、温かく知的なエグゼクティブ・コーチとして300〜400文字程度で「1. 今週の思考テーマと成長している点」「2. コンディション傾向と来週へのアドバイス」を簡潔にまとめてください。\n\n${recentLogs}`;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await res.json();
+        const report = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        localStorage.setItem(KEYS.WEEKLY_REPORT, report.trim());
+        renderWeeklyStats();
+        showToast('週次レポートを更新しました');
+      } catch (e) {
+        alert('週次分析に失敗しました');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'AI分析を実行';
+      }
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      localStorage.setItem(KEYS.API_KEY, key);
+      document.getElementById('apiSetupBanner').classList.toggle('hidden', Boolean(key));
+      showToast('APIキーを端末に保存しました');
+    }
+
+    function savePinSetting() {
+      const pin = document.getElementById('pinSettingInput').value.trim();
+      if (pin && !/^\d{4}$/.test(pin)) {
+        alert('4桁の半角数字で入力してください（解除する場合は空欄にしてください）');
+        return;
+      }
+      if (pin) {
+        localStorage.setItem(KEYS.PIN, pin);
+        showToast('4桁パスコードを設定しました');
+      } else {
+        localStorage.removeItem(KEYS.PIN);
+        showToast('パスコードロックを解除しました');
+      }
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `journal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJSON(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!Array.isArray(imported)) throw new Error();
+          entries = imported;
+          localStorage.setItem(KEYS.ENTRIES, JSON.stringify(entries));
+          refreshStats();
+          renderSerendipity();
+          renderTimeline();
+          showToast(`${imported.length}件の記録を復元しました`);
+        } catch {
+          alert('JSONファイルの形式が正しくありません');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportMarkdown() {
+      const md = entries.map(e => (
+        `## ${e.date} (${e.time}) [Mood:${e.mood}/5 Energy:${e.energy}/5]\n` +
+        `Tags: ${(e.tags || []).map(t => '#' + t).join(' ')}\n\n` +
+        `### ハイライト\n${e.praise}\n\n### 出来事の整理\n${e.reflection}\n\n### 気づき\n${e.insight}\n\n### ネクストアクション\n${e.nextAction}\n\n### 原文\n${e.raw}\n\n---\n`
+      )).join('\n');
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `journal-export-${new Date().toISOString().slice(0, 10)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
